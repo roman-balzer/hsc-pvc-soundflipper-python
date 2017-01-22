@@ -20,7 +20,12 @@ RMS_UPPER_BOUND = 10000.0
 
 FREQ_LOWER_BOUND = 0
 FREQ_THRESHOLD = 300
+
 FREQ_UPPER_BOUND = 1000
+
+# This Factor skews the Freq Threshold, since normally when
+# doing a louder sound, this will result in an increase of the freq
+SKEW = 300
 
 # Flipper Positions
 left_flip_x = [-200, -100, -200, -210, -200]
@@ -48,6 +53,8 @@ srms_upper = Slider(axrms_upper, 'RMS Upper Bound', 0, 20000, valinit=RMS_UPPER_
 
 axrms_lower = plt.axes([0.25, 0.21, 0.65, 0.03], axisbg=axcolor)
 srms_lower = Slider(axrms_lower, 'RMS Lower Bound', 0, 5000, valinit=RMS_LOWER_BOUND)
+
+text_thresh = ax.text(-90,230, ('Threshold:' + str(FREQ_THRESHOLD)) , style='italic')
 
 def update(val):
     global FREQ_THRESHOLD
@@ -78,13 +85,19 @@ def draw_flipper(rms, freq):
     else:
         move_y = -100
 
-    if FREQ_LOWER_BOUND <= freq <= FREQ_THRESHOLD:
+    flb = (rms + FREQ_LOWER_BOUND*SKEW)/SKEW
+    fub = (rms + FREQ_UPPER_BOUND*SKEW)/SKEW
+    fth = (rms + FREQ_THRESHOLD*SKEW)/SKEW
+    text_thresh.set_text("Threshold: " +str(fth))
+    print fth
+
+    if flb <= freq <= fth:
         # LEFT FLIPPER
         right_flip_y[1] = -100
         right_flip_x[1] = 100
         left_flip_y[1] = move_y
         left_flip_x[1] = -100+move_x
-    elif FREQ_THRESHOLD <= freq <= FREQ_UPPER_BOUND:
+    elif fth <= freq <= fub:
         # RIGHT FLIPPER
         left_flip_y[1] = -100
         left_flip_x[1] = -100
