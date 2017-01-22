@@ -54,6 +54,9 @@ srms_upper = Slider(axrms_upper, 'RMS Upper Bound', 0, 20000, valinit=RMS_UPPER_
 axrms_lower = plt.axes([0.25, 0.21, 0.65, 0.03], axisbg=axcolor)
 srms_lower = Slider(axrms_lower, 'RMS Lower Bound', 0, 5000, valinit=RMS_LOWER_BOUND)
 
+axskew = plt.axes([0.25, 0.25, 0.65, 0.03], axisbg=axcolor)
+sskew = Slider(axskew, 'Skew Factor', 1, 500, valinit=SKEW)
+
 text_thresh = ax.text(-90,230, ('Threshold:' + str(FREQ_THRESHOLD)) , style='italic')
 
 def update(val):
@@ -63,9 +66,12 @@ def update(val):
     RMS_UPPER_BOUND = srms_upper.val
     global RMS_LOWER_BOUND
     RMS_LOWER_BOUND = srms_lower.val
+    global SKEW
+    SKEW = sskew.val
 sfreq_threshold.on_changed(update)
 srms_upper.on_changed(update)
 srms_lower.on_changed(update)
+sskew.on_changed(update)
 
 
 def draw_flipper(rms, freq):
