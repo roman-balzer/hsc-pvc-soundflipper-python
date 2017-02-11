@@ -21,3 +21,8 @@ def send(points):
 def startNewGame():
     global server
     server.newGame()
+
+def setMultiplicator(mult):
+    global server
+    #TODO: has to be implemented in server
+    server.setMultiplicator(mult)

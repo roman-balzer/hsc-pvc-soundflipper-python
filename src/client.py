@@ -4,10 +4,12 @@ import network
 import ear
 #import launch
 #import voice
+#import mouth
 
 network.setup()
 #launch.setup()
 #voice.setup()
+#mouth.setup()
 
 #the ear component runs in its own thread 
 class EarThread(threading.Thread):
