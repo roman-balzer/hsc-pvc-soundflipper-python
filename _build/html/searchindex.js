@@ -1,1 +1,0 @@
-Search.setIndex({titles:["Auto Generated Documentation","Welcome to Flipper&#8217;s documentation!"],terms:{search:1,page:1,index:1,content:1,modul:1},titleterms:{gener:0,welcom:1,document:[0,1],flipper:1,tabl:1,auto:0,indic:1},objects:{},objnames:{},objtypes:{},envversion:43,filenames:["code","index"]})
