@@ -75,8 +75,10 @@ count = 0
 rmsA=[]
 rmsMedianA=[]
 rmsMeanA=[]
-freqA=[]
 countA=[]
+freqA=[]
+fMedA=[]
+fMeanA=[]
 while True:
     count += 1
     data = stream.read(SAMPLE_SIZE)
@@ -109,16 +111,20 @@ while True:
         freqA.pop(0)
         rmsMedianA.pop(0)
         rmsMeanA.pop(0)
+        fMedA.pop(0)
+        fMeanA.pop(0)
     else:
         countA.append(count)
     rmsA.append(rms)
     freqA.append(freq)
+    fMedA.append(statistics.median(freqA))
+    fMeanA.append(statistics.mean(freqA))
     rmsMedianA.append(statistics.median(rmsA))
     rmsMeanA.append(statistics.mean(rmsA))
 
 
     draw_flipper(rms, freq, count)
-    flip.plot(rmsA, freqA, countA,rmsMedianA,rmsMeanA)
+    flip.plot(rmsA, freqA, countA,rmsMedianA,rmsMeanA,fMedA,fMeanA)
 
 stream.stop_stream()
 stream.close()

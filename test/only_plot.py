@@ -26,14 +26,20 @@ FREQ_UPPER_BOUND = 1000
 
 SKEW = 300
 
-plt.subplot(211)
+plt.subplot(311)
 plt.axis([-300, 300, -200, 200])
 line1, line2 = plt.plot(left_flip_x, left_flip_y, 'r-', right_flip_x, right_flip_y, 'b-', linewidth=4)
 
-plt.subplot(212)
+plt.subplot(312)
 plt.axis([0, 200, 0, 5000])
-freqLine, rmsLine, rmed, rmean,lrm = plt.plot([], [], 'r-', [], [], 'b-',[], [], 'm-',[], [], 'y-', [], [], 'k-', linewidth=1)
+rmsLine, rmed, rmean = plt.plot([], 'b-',[], [], 'm-',[], [], 'y-', linewidth=1)
 lrms = plt.axhline(RMS_LOWER_BOUND,0,200,linewidth=1, color='k')
+
+plt.subplot(313)
+plt.axis([0, 200, 0, 1000])
+freqLine, fmedl, fmeanl = plt.plot([], [], 'r-',[], [], 'm-',[], [], 'y-', linewidth=1)
+lf = plt.axhline(FREQ_THRESHOLD,0,200,linewidth=1, color='k')
+
 
 # axcolor = 'lightgoldenrodyellow'
 # axfreq_threshold = plt.axes([0.25, 0.1, 0.65, 0.03], axisbg=axcolor)
@@ -66,13 +72,14 @@ lrms = plt.axhline(RMS_LOWER_BOUND,0,200,linewidth=1, color='k')
 
 lrmsA = []
 
-def plot(rmsA, freqA, countA, rMed, rMean):
+def plot(rmsA, freqA, countA, rMed, rMean, fmda, fmea):
     global lrms
+    global lf
 
     RMS_LOWER_BOUND = 1.2 * rMed[len(rMed)-1]
+    FREQ_THRESHOLD = 1.2 * fmda[len(fmda)-1]
     lrms.set_ydata([RMS_LOWER_BOUND,RMS_LOWER_BOUND])
-
-
+    lf.set_ydata([FREQ_THRESHOLD,FREQ_THRESHOLD])
 
     rms = rmsA[len(rmsA)-1]
     freq = freqA[len(freqA)-1]
@@ -130,6 +137,10 @@ def plot(rmsA, freqA, countA, rMed, rMean):
     rmed.set_xdata(countA)
     rmean.set_ydata(rMean)
     rmean.set_xdata(countA)
+    fmedl.set_ydata(fmda)
+    fmedl.set_xdata(countA)
+    fmeanl.set_ydata(fmea)
+    fmeanl.set_xdata(countA)
 
     fig.canvas.draw()
     plt.pause(0.00001)  # Note this correction
