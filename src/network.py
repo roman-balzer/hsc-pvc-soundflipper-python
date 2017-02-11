@@ -7,7 +7,7 @@ def setup():
     global server
     # Get Config-Parameters
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('./src/config.ini')
     configParameters = config['network']
 
     URI = configParameters['uri']
@@ -17,3 +17,7 @@ def setup():
 def send(points):
     global server
     server.addPoints(points)
+
+def startNewGame():
+    global server
+    server.newGame()

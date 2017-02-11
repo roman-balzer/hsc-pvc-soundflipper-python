@@ -1,14 +1,14 @@
-# coding=utf-8
 import configparser
 import time
 import RPi.GPIO as GPIO
 import subprocess
 import random
 import network
+import launch
 
 # Get Config-Parameters
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('./src/config.ini')
 configParameters = config['ear']
 configGPIO = config['gpio']
 
@@ -58,6 +58,7 @@ def run():
         print("------------------------------")
         if float(Abstand) <= distance:
             #score senden
+            launch.setNewGameFalse()
             network.send(100)
             Zufallszahl = random.randrange(1,4)
             Datei = "audio/" + str(Zufallszahl) + ".mp3"

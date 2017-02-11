@@ -8,7 +8,7 @@ import RPi.GPIO as gpio
 
 # Get Config-Parameters
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('./src/config.ini')
 configParameters = config['voice']
 configGPIO = config['gpio']
 
@@ -103,6 +103,7 @@ def run():
         RMS_LOWER_BOUND = RMS_ADAPTION_FACTOR * statistics.median(rms_list)
         draw_flipper(rms, freq)
 
+def cleanup():
     stream.stop_stream()
     stream.close()
     audio.terminate()
