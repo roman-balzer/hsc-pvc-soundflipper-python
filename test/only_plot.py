@@ -76,8 +76,8 @@ def plot(rmsA, freqA, countA, rMed, rMean, fmda, fmea):
     global lrms
     global lf
 
-    RMS_LOWER_BOUND = 1.2 * rMed[len(rMed)-1]
-    FREQ_THRESHOLD = 1.2 * fmda[len(fmda)-1]
+    RMS_LOWER_BOUND = max(1.2 * rMed[len(rMed)-1],800)
+    FREQ_THRESHOLD = max(1.2 * fmda[len(fmda)-1],300)
     lrms.set_ydata([RMS_LOWER_BOUND,RMS_LOWER_BOUND])
     lf.set_ydata([FREQ_THRESHOLD,FREQ_THRESHOLD])
 
