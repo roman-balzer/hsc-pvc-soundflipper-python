@@ -3,7 +3,7 @@ import time
 import RPi.GPIO as GPIO
 import subprocess
 import random
-import network
+#import network
 import launch
 
 # Get Config-Parameters
@@ -18,7 +18,6 @@ sleeptime = float(configParameters['Sleeptime'])
 distance = int(configParameters['Distance'])
 carrier_Signal_Duration = float(configParameters['Carrier_Signal_Duration'])
 
-GPIO.setmode(GPIO.BCM)
 
 def setup():
     random.seed()
@@ -54,15 +53,15 @@ def run():
         # Der Abstand wird auf zwei Stellen hinterm Komma formatiert
         Abstand = format((Dauer * 34300) / 2, '.2f')
         # Der berechnete Abstand wird auf der Konsole ausgegeben
-        print("Der Abstand beträgt:"), Abstand,("cm")
+        print("Der Abstand beträgt:%s"%Abstand)
         print("------------------------------")
         if float(Abstand) <= distance:
             #score senden
             launch.setNewGameFalse()
-            network.send(100)
+ #           network.send(100)
             Zufallszahl = random.randrange(1,4)
             Datei = "audio/" + str(Zufallszahl) + ".mp3"
-            subprocess.Popen(["mpg123", Datei])
+            #subprocess.Popen(["mpg123", Datei])
 
     # Pause zwischen den einzelnen Messungen
     time.sleep(sleeptime)

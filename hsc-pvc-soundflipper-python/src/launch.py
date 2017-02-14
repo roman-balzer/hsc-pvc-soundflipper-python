@@ -6,7 +6,7 @@ isNewGame = True
 
 # Get Config-Parameters
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('./src/config.ini')
 configGPIO = config['gpio']
 
 def setNewGameFalse():
