@@ -3,7 +3,7 @@ import time
 import RPi.GPIO as GPIO
 import subprocess
 import random
-#import network
+import network
 import launch
 
 # Get Config-Parameters
@@ -25,8 +25,16 @@ def setup():
     GPIO.setup(Echo_InputPin, GPIO.IN)
     GPIO.output(Trigger_OutputPin, False)
 
+def onBallDetection():
+    #score senden
+    launch.setNewGameFalse()
+    network.send(100)
+    Zufallszahl = random.randrange(1,4)
+    Datei = "audio/" + str(Zufallszahl) + ".mp3"
+    subprocess.Popen(["mpg123", Datei])
+
 def run():
-     # Abstandsmessung wird mittels des 10us langen Triggersignals gestartet
+    # Abstandsmessung wird mittels des 10us langen Triggersignals gestartet
     GPIO.output(Trigger_OutputPin, True)
     time.sleep(carrier_Signal_Duration)
     GPIO.output(Trigger_OutputPin, False)
@@ -46,25 +54,19 @@ def run():
 
     # Überprüfung, ob der gemessene Wert innerhalb der zulässigen Entfernung liegt
     if Abstand < 2 or (round(Abstand) > 300):
-        # Falls nicht wird eine Fehlermeldung ausgegeben
-        print("Abstand außerhalb des Messbereich")
-        print("------------------------------")
+        # Es wird davon ausgegangen, dass wenn der gemessene Wert außerhalb des Bereichs liegt, dass dann ein Ball
+        # in das Ohr gefallen ist.
+        #print("Abstand außerhalb des Messbereich")
+        #print("------------------------------")
+        onBallDetection()
     else:
         # Der Abstand wird auf zwei Stellen hinterm Komma formatiert
         Abstand = format((Dauer * 34300) / 2, '.2f')
-        # Der berechnete Abstand wird auf der Konsole ausgegeben
-        print("Der Abstand beträgt:%s"%Abstand)
-        print("------------------------------")
+        #print("Der Abstand beträgt:%s"%Abstand)
+        #print("------------------------------")
         if float(Abstand) <= distance:
-            #score senden
-            launch.setNewGameFalse()
- #           network.send(100)
-            Zufallszahl = random.randrange(1,4)
-            Datei = "audio/" + str(Zufallszahl) + ".mp3"
-            #subprocess.Popen(["mpg123", Datei])
+            onBallDetection()
 
     # Pause zwischen den einzelnen Messungen
     time.sleep(sleeptime)
-
-
 

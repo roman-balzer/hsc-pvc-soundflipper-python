@@ -3,7 +3,6 @@ import configparser
 import time
 import network
 
-i = 1
 # Get Config-Parameters
 config = configparser.ConfigParser()
 config.read('./src/config.ini')
@@ -11,14 +10,12 @@ configGPIO = config['gpio']
 
 def mouth_happy_pressed(channel):
     print("Mouth-Happy-Pressed Callback")
-    network.setMultiplicator(10)
+    network.setMultiplicator(1.5)
 
 def mouth_sad_pressed(channel):
     print('Edge detected on channel %s'%channel)
     print("Mouth-Sad-Pressed Callback")
-    global i
-    network.setMultiplicator(i)
-    i = i+1
+    network.setMultiplicator(0.5)
 
 def setup():
     print("Mouth setup")
