@@ -1,72 +1,66 @@
-import configparser
 import time
 import RPi.GPIO as GPIO
 import subprocess
 import random
-import network
-import launch
 
-# Get Config-Parameters
-config = configparser.ConfigParser()
-config.read('./src/config.ini')
-configParameters = config['ear']
-configGPIO = config['gpio']
+class Ear:
+    def __init__(self, networkHandler, configHandler, launcher):
+        self.networkHandler = networkHandler
+        self.launcher = launcher
+        config = configHandler.getGPIOConfig()
 
-Trigger_OutputPin = int(configGPIO['Trigger_OutputPin'])
-Echo_InputPin    = int(configGPIO['Echo_InputPin'])
-sleeptime = float(configParameters['Sleeptime'])
-distance = int(configParameters['Distance'])
-carrier_Signal_Duration = float(configParameters['Carrier_Signal_Duration'])
+        self.Trigger_OutputPin = int(config['Trigger_OutputPin'])
+        self.Echo_InputPin = int(config['Echo_InputPin'])
+        self.sleeptime = float(config['Sleeptime'])
+        self.distance = int(config['Distance'])
+        self.carrier_Signal_duration = float(config['Carrier_Signal_duration'])
 
+        random.seed()
+        GPIO.setup(Trigger_OutputPin, GPIO.OUT)
+        GPIO.setup(Echo_InputPin, GPIO.IN)
+        GPIO.output(Trigger_OutputPin, False)
 
-def setup():
-    random.seed()
-    GPIO.setup(Trigger_OutputPin, GPIO.OUT)
-    GPIO.setup(Echo_InputPin, GPIO.IN)
-    GPIO.output(Trigger_OutputPin, False)
+    def onBallDetection(self):
+        self.launcher.setNewGameFalse()
+        self.networkHandler.send(100)
+        randomNumber = random.randrange(1,4)
+        audioFilePath = "audio/" + str(randomNumber) + ".mp3"
+        subprocess.Popen(["mpg123", audioFilePath])
 
-def onBallDetection():
-    #score senden
-    launch.setNewGameFalse()
-    network.send(100)
-    Zufallszahl = random.randrange(1,4)
-    Datei = "audio/" + str(Zufallszahl) + ".mp3"
-    subprocess.Popen(["mpg123", Datei])
+    def run(self):
+        # distancesmessung wird mittels des 10us langen Triggersignals gestartet
+        GPIO.output(self.Trigger_OutputPin, True)
+        time.sleep(self.carrier_Signal_duration)
+        GPIO.output(self.Trigger_OutputPin, False)
 
-def run():
-    # Abstandsmessung wird mittels des 10us langen Triggersignals gestartet
-    GPIO.output(Trigger_OutputPin, True)
-    time.sleep(carrier_Signal_Duration)
-    GPIO.output(Trigger_OutputPin, False)
+        # Hier wird die Stopuhr gestartet
+        timeOn = time.time()
+        while GPIO.input(Echo_InputPin) == 0:
+            timeOn = time.time() # Es wird solange die aktuelle Zeit gespeichert, bis das Signal aktiviert wird
 
-    # Hier wird die Stopuhr gestartet
-    EinschaltZeit = time.time()
-    while GPIO.input(Echo_InputPin) == 0:
-        EinschaltZeit = time.time() # Es wird solange die aktuelle Zeit gespeichert, bis das Signal aktiviert wird
+        while GPIO.input(Echo_InputPin) == 1:
+            timeOff = time.time() # Es wird die letzte Zeit aufgenommen, wo noch das Signal aktiv war
 
-    while GPIO.input(Echo_InputPin) == 1:
-        AusschaltZeit = time.time() # Es wird die letzte Zeit aufgenommen, wo noch das Signal aktiv war
+        # Die Differenz der beiden Zeiten ergibt die gesuchte Dauer
+        duration = timeOff - timeOn
+        # Mittels dieser kann nun der distance auf Basis der Schallgeschwindigkeit der distance berechnet werden
+        distance = (duration * 34300) / 2
 
-    # Die Differenz der beiden Zeiten ergibt die gesuchte Dauer
-    Dauer = AusschaltZeit - EinschaltZeit
-    # Mittels dieser kann nun der Abstand auf Basis der Schallgeschwindigkeit der Abstand berechnet werden
-    Abstand = (Dauer * 34300) / 2
-
-    # Überprüfung, ob der gemessene Wert innerhalb der zulässigen Entfernung liegt
-    if Abstand < 2 or (round(Abstand) > 300):
-        # Es wird davon ausgegangen, dass wenn der gemessene Wert außerhalb des Bereichs liegt, dass dann ein Ball
-        # in das Ohr gefallen ist.
-        #print("Abstand außerhalb des Messbereich")
-        #print("------------------------------")
-        onBallDetection()
-    else:
-        # Der Abstand wird auf zwei Stellen hinterm Komma formatiert
-        Abstand = format((Dauer * 34300) / 2, '.2f')
-        #print("Der Abstand beträgt:%s"%Abstand)
-        #print("------------------------------")
-        if float(Abstand) <= distance:
+        # Überprüfung, ob der gemessene Wert innerhalb der zulässigen Entfernung liegt
+        if distance < 2 or (round(distance) > 300):
+            # Es wird davon ausgegangen, dass wenn der gemessene Wert außerhalb des Bereichs liegt, dass dann ein Ball
+            # in das Ohr gefallen ist.
+            #print("distance außerhalb des Messbereich")
+            #print("------------------------------")
             onBallDetection()
+        else:
+            # Der distance wird auf zwei Stellen hinterm Komma formatiert
+            distance = format((duration * 34300) / 2, '.2f')
+            #print("Der distance beträgt:%s"%distance)
+            #print("------------------------------")
+            if float(distance) <= distance:
+                onBallDetection()
 
-    # Pause zwischen den einzelnen Messungen
-    time.sleep(sleeptime)
+        # Pause zwischen den einzelnen Messungen
+        time.sleep(sleeptime)
 

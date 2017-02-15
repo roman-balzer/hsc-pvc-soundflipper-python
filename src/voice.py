@@ -1,115 +1,113 @@
 import statistics
-import configparser
 import pyaudio
 import audioop
 import numpy as np
 import wave
 import RPi.GPIO as gpio
 
-# Get Config-Parameters
-config = configparser.ConfigParser()
-config.read('./src/config.ini')
-configParameters = config['voice']
-configGPIO = config['gpio']
 
-FORMAT = pyaudio.paInt16  # We use 16bit format per sample
-CHANNELS = int(configParameters['Channels'])
-RATE = int(configParameters['Rate'])
-SAMPLE_SIZE = int(configParameters['Sample_Size'])  # 1024bytes of data red from a buffer
-CHUNK = SAMPLE_SIZE
-WINDOW = np.blackman(CHUNK)
+class Voice:
+    def __init__(self, configHandler):
+        configVoiceParams = configHandler.getVoiceConfig()
+        configGPIOParams = configHandler.getGPIOConfig()
 
-RMS_LOWER_BOUND = int(configParameters['Rms_Lower_Bound'])
-RMS_ADAPTION_FACTOR = float(configParameters['Rms_Adaption_Factor'])
-RMS_MIN_VALUE = float(configParameters['Rms_Min_Value'])
-MEDIAM_SAMPLE_SIZE = int(configParameters['Median_Sample_Size'])
+        FORMAT = pyaudio.paInt16  # We use 16bit format per sample
+        CHANNELS = int(configVoiceParams['Channels'])
+        RATE = int(configVoiceParams['Rate'])
+        SAMPLE_SIZE = int(configVoiceParams['Sample_Size'])  # 1024bytes of data red from a buffer
+        CHUNK = SAMPLE_SIZE
+        WINDOW = np.blackman(CHUNK)
 
-FREQ_LOWER_BOUND = int(configParameters['Freq_Lower_Bound'])
-FREQ_THRESHOLD = int(configParameters['Freq_Threshold'])
-FREQ_UPPER_BOUND = int(configParameters['Freq_Upper_Bound'])
+        RMS_LOWER_BOUND = int(configVoiceParams['Rms_Lower_Bound'])
+        RMS_ADAPTION_FACTOR = float(configVoiceParams['Rms_Adaption_Factor'])
+        RMS_MIN_VALUE = float(configVoiceParams['Rms_Min_Value'])
+        MEDIAM_SAMPLE_SIZE = int(configVoiceParams['Median_Sample_Size'])
 
-# This Factor skews the Freq Threshold, since normally when
-# doing a louder sound, this will result in an increase of the freq
-SKEW = int(configParameters['Skew'])
+        FREQ_LOWER_BOUND = int(configVoiceParams['Freq_Lower_Bound'])
+        FREQ_THRESHOLD = int(configVoiceParams['Freq_Threshold'])
+        FREQ_UPPER_BOUND = int(configVoiceParams['Freq_Upper_Bound'])
 
-## PIN VARS
-PIN_LEFT = int(configGPIO['Flipper_Left_OutputPin'])
-PIN_RIGHT = int(configGPIO['Flipper_Right_OutputPin'])
+        # This Factor skews the Freq Threshold, since normally when
+        # doing a louder sound, this will result in an increase of the freq
+        SKEW = int(configVoiceParams['Skew'])
 
-def setup():
-    #SET UP GPIO PINS ON RASPBERRY
-    gpio.setmode(gpio.BCM)
-    gpio.setup(PIN_LEFT,gpio.OUT)
-    gpio.setup(PIN_RIGHT,gpio.OUT)
+        ## PIN VARS
+        PIN_LEFT = int(configGPIOParams['Flipper_Left_OutputPin'])
+        PIN_RIGHT = int(configGPIOParams['Flipper_Right_OutputPin'])
 
-def draw_flipper(rms, freq):
-    if rms > 5000:
-        rms = 5000
-    if freq > 1000:
-        freq = 1000
+        #SET UP GPIO PINS ON RASPBERRY
+        gpio.setmode(gpio.BCM)
+        gpio.setup(PIN_LEFT,gpio.OUT)
+        gpio.setup(PIN_RIGHT,gpio.OUT)
 
-    flb = (rms + FREQ_LOWER_BOUND*SKEW)/SKEW
-    fub = (rms + FREQ_UPPER_BOUND*SKEW)/SKEW
-    fth = (rms + FREQ_THRESHOLD*SKEW)/SKEW
+    def draw_flipper(rms, freq):
+        if rms > 5000:
+            rms = 5000
+        if freq > 1000:
+            freq = 1000
 
-    if rms > RMS_LOWER_BOUND:
-        if flb <= freq <= fth:
-            gpio.output(PIN_LEFT, True)
-            gpio.output(PIN_RIGHT, False)
+        flb = (rms + FREQ_LOWER_BOUND*SKEW)/SKEW
+        fub = (rms + FREQ_UPPER_BOUND*SKEW)/SKEW
+        fth = (rms + FREQ_THRESHOLD*SKEW)/SKEW
 
-        elif fth <= freq <= fub:
-            gpio.output(PIN_LEFT, False)
-            gpio.output(PIN_RIGHT, True)
+        if rms > RMS_LOWER_BOUND:
+            if flb <= freq <= fth:
+                gpio.output(PIN_LEFT, True)
+                gpio.output(PIN_RIGHT, False)
+
+            elif fth <= freq <= fub:
+                gpio.output(PIN_LEFT, False)
+                gpio.output(PIN_RIGHT, True)
+            else:
+                gpio.output(PIN_LEFT, False)
+                gpio.output(PIN_RIGHT, False)
+                pass  # NO MOVEMENT
         else:
             gpio.output(PIN_LEFT, False)
             gpio.output(PIN_RIGHT, False)
-            pass  # NO MOVEMENT
-    else:
-        gpio.output(PIN_LEFT, False)
-        gpio.output(PIN_RIGHT, False)
 
 
-def run():
-    # start Recording
-    audio = pyaudio.PyAudio()
-    stream = audio.open(format=FORMAT,
-                        channels=CHANNELS,
-                        rate=RATE, input=True,
-                        frames_per_buffer=SAMPLE_SIZE)
-    count = 0
-    frames = []
-    rms_list = []
-    while True:
-        count += 1
-        data = stream.read(SAMPLE_SIZE)
-        frames.append(data)
+    def run():
+        # start Recording
+        audio = pyaudio.PyAudio()
+        stream = audio.open(format=FORMAT,
+                            channels=CHANNELS,
+                            rate=RATE, input=True,
+                            frames_per_buffer=SAMPLE_SIZE)
+        count = 0
+        frames = []
+        rms_list = []
+        while True:
+            count += 1
+            data = stream.read(SAMPLE_SIZE)
+            frames.append(data)
 
-        rms = audioop.rms(data, 2)
+            rms = audioop.rms(data, 2)
 
-        indata = np.array(wave.struct.unpack("%dh" % CHUNK, data)) * WINDOW
-        fftData = abs(np.fft.rfft(indata)) ** 2
-        # find the maximum
-        which = fftData[1:].argmax() + 1
-        # use quadratic interpolation around the max
-        if which != len(fftData) - 1:
-            y0, y1, y2 = np.log(fftData[which - 1:which + 2:])
-            x1 = (y2 - y0) * .5 / (2 * y1 - y2 - y0)
-            # find the frequency and output it
-            freq = (which + x1) * RATE / SAMPLE_SIZE
-        else:
-            freq = which * RATE / SAMPLE_SIZE
+            indata = np.array(wave.struct.unpack("%dh" % CHUNK, data)) * WINDOW
+            fftData = abs(np.fft.rfft(indata)) ** 2
+            # find the maximum
+            which = fftData[1:].argmax() + 1
+            # use quadratic interpolation around the max
+            if which != len(fftData) - 1:
+                y0, y1, y2 = np.log(fftData[which - 1:which + 2:])
+                x1 = (y2 - y0) * .5 / (2 * y1 - y2 - y0)
+                # find the frequency and output it
+                freq = (which + x1) * RATE / SAMPLE_SIZE
+            else:
+                freq = which * RATE / SAMPLE_SIZE
 
-        # Create a List to calculate the median of the rms
-        if count > MEDIAM_SAMPLE_SIZE:
-            rms_list.pop(0)
-        rms_list.append(rms)
+            # Create a List to calculate the median of the rms
+            if count > MEDIAM_SAMPLE_SIZE:
+                rms_list.pop(0)
+            rms_list.append(rms)
 
-        # Adjust the Volume Threshold based on the last RMS values
-        RMS_LOWER_BOUND = max(RMS_ADAPTION_FACTOR * statistics.median(rms_list), RMS_MIN_VALUE)
-        draw_flipper(rms, freq)
+            # Adjust the Volume Threshold based on the last RMS values
+            RMS_LOWER_BOUND = max(RMS_ADAPTION_FACTOR * statistics.median(rms_list), RMS_MIN_VALUE)
+            draw_flipper(rms, freq)
 
-def cleanup():
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
-    # @TODO: Dont forget to gpio.cleanup()
+    def cleanup():
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
+        # @TODO: Dont forget to gpio.cleanup()
