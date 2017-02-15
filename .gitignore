@@ -1,8 +1,0 @@
-.idea
-.vscode
-audio/
-src/__pycache__/
-__pycache__
-*.pyc 
-Doxyfile
-docs/

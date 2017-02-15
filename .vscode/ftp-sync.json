@@ -1,0 +1,20 @@
+{
+    "remotePath": "./Flipper/",
+    "host": "192.168.137.114",
+    "username": "tanja",
+    "password": "supertanja",
+    "port": 22,
+    "secure": true,
+    "protocol": "sftp",
+    "uploadOnSave": false,
+    "passive": false,
+    "debug": false,
+    "privateKeyPath": null,
+    "passphrase": null,
+    "ignore": [
+        "\\.vscode",
+        "\\.git",
+        "\\.DS_Store",
+        "\\hsc-pvc-soundflipper-python/src/audio/"
+    ]
+}
