@@ -5,8 +5,11 @@ import numpy as np
 import wave
 import RPi.GPIO as gpio
 
-
 class Voice:
+    ## Initializes the Voice component.
+    # Sets the GPIO pins (as in config file) and add sets a whole lot of Parameters.
+    # @param self The object pointer.
+    # @param configHandler The pointer to object of type configHandler
     def __init__(self, configHandler):
         configVoiceParams = configHandler.getVoiceConfig()
         configGPIOParams = configHandler.getGPIOConfig()
@@ -14,7 +17,7 @@ class Voice:
         self.FORMAT = pyaudio.paInt16  # We use 16bit format per sample
         self.CHANNELS = int(configVoiceParams['Channels'])
         self.RATE = int(configVoiceParams['Rate'])
-        self.SAMPLE_SIZE = int(configVoiceParams['Sample_Size'])  # 1024bytes of data red from a buffer
+        self.SAMPLE_SIZE = int(configVoiceParams['Sample_Size'])
         self.CHUNK = self.SAMPLE_SIZE
         self.WINDOW = np.blackman(self.CHUNK)
 
@@ -35,11 +38,16 @@ class Voice:
         self.PIN_LEFT = int(configGPIOParams['Flipper_Left_OutputPin'])
         self.PIN_RIGHT = int(configGPIOParams['Flipper_Right_OutputPin'])
 
-        #SET UP GPIO PINS ON RASPBERRY
+        # SET UP GPIO PINS ON RASPBERRY
         gpio.setmode(gpio.BCM)
         gpio.setup(self.PIN_LEFT,gpio.OUT)
         gpio.setup(self.PIN_RIGHT,gpio.OUT)
 
+    ## This function, sets the GPIO Pins to the correct binary Values. These values
+    # depend on the provided rms and freq values.
+    # @param self - Object Pointer
+    # @param rms - Root mean square, this value displayed the strength of the Volume. Max 5000
+    # @param freq - This value is the frequency of the recorded Voice. Max 5000
     def draw_flipper(self, rms, freq):
         if rms > 5000:
             rms = 5000
@@ -66,7 +74,8 @@ class Voice:
             gpio.output(self.PIN_LEFT, False)
             gpio.output(self.PIN_RIGHT, False)
 
-
+    ## This function starts to record the voice through the main audio input.
+    # @param self - Object Pointer
     def run(self):
         # start Recording
         audio = pyaudio.PyAudio()
@@ -106,8 +115,9 @@ class Voice:
             self.RMS_LOWER_BOUND = max(self.RMS_ADAPTION_FACTOR * statistics.median(rms_list), self.RMS_MIN_VALUE)
             self.draw_flipper(rms, freq)
 
+    ## This function stops the audio stream and cleans up the audio recording
+    # @param self - Object Pointer
     def cleanup(self):
         stream.stop_stream()
         stream.close()
         audio.terminate()
-        # @TODO: Dont forget to gpio.cleanup()
