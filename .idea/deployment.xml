@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="Raspi">
+    <serverData>
+      <paths name="Raspi">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/tanja/rpc" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/.idea" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.gitignore" />
+            <excludedPath local="true" path="$PROJECT_DIR$/live_audio_plot.py" />
+            <excludedPath local="true" path="$PROJECT_DIR$/only_plot.py" />
+            <excludedPath local="true" path="$PROJECT_DIR$/README.md" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
