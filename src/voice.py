@@ -21,6 +21,7 @@ WINDOW = np.blackman(CHUNK)
 
 RMS_LOWER_BOUND = int(configParameters['Rms_Lower_Bound'])
 RMS_ADAPTION_FACTOR = float(configParameters['Rms_Adaption_Factor'])
+RMS_MIN_VALUE = float(configParameters['Rms_Min_Value'])
 MEDIAM_SAMPLE_SIZE = int(configParameters['Median_Sample_Size'])
 
 FREQ_LOWER_BOUND = int(configParameters['Freq_Lower_Bound'])
@@ -104,7 +105,7 @@ def run():
         rms_list.append(rms)
 
         # Adjust the Volume Threshold based on the last RMS values
-        RMS_LOWER_BOUND = RMS_ADAPTION_FACTOR * statistics.median(rms_list)
+        RMS_LOWER_BOUND = max(RMS_ADAPTION_FACTOR * statistics.median(rms_list), RMS_MIN_VALUE)
         draw_flipper(rms, freq)
 
 def cleanup():
