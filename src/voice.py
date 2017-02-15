@@ -5,7 +5,10 @@ import numpy as np
 import wave
 import RPi.GPIO as gpio
 
+## This class encapsulates the functionality to analyze the sound stream from the microphone.
+# It analyzes the high and low sounds and decides which Flipper assemply has to be triggered.
 class Voice:
+    
     ## Initializes the Voice component.
     # Sets the GPIO pins (as in config file) and add sets a whole lot of Parameters.
     # @param self The object pointer.
