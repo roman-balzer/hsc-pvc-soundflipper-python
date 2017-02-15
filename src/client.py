@@ -19,22 +19,28 @@ voice = Voice(config)
 ## Encapsulates the Ear component in  own thread.
 # Because the Ear uses polling to check the value of the ultra sonic sensor. 
 class EarThread(threading.Thread):
+    
+    ## Constructor. Initialisiert das Objekt Ear. 
+    # @param self The object pointer.
     def __init__(self):
         threading.Thread.__init__(self)
         self.ear = Ear(network, config, launcher)
         print('initialized ear-thread')
     
+    ## Runs the functionality of the Ear. 
+    # @param self The object pointer.
     def run(self):
-        print('startet ear-thread')
         while True:
             self.ear.run()
-        print('Finished ear-thread')
+
 try:
-    #start the ear thread
+    #initialize and start the ear thread
     background = EarThread()
     background.start()
+
     #the voice component acts as the main Programm
     voice.run()
+    
     background.join()
 
 # clean up after termination of the programm
