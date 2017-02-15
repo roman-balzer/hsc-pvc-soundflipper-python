@@ -41,7 +41,7 @@ def setup():
     gpio.setup(PIN_LEFT,gpio.OUT)
     gpio.setup(PIN_RIGHT,gpio.OUT)
 
-def draw_flipper(rms, freq, count):
+def draw_flipper(rms, freq):
     if rms > 5000:
         rms = 5000
     if freq > 1000:
@@ -51,17 +51,21 @@ def draw_flipper(rms, freq, count):
     fub = (rms + FREQ_UPPER_BOUND*SKEW)/SKEW
     fth = (rms + FREQ_THRESHOLD*SKEW)/SKEW
 
-    if flb <= freq <= fth:
-        gpio.output(PIN_LEFT, True)
-        gpio.output(PIN_RIGHT, False)
+    if rms > RMS_LOWER_BOUND:
+        if flb <= freq <= fth:
+            gpio.output(PIN_LEFT, True)
+            gpio.output(PIN_RIGHT, False)
 
-    elif fth <= freq <= fub:
-        gpio.output(PIN_LEFT, False)
-        gpio.output(PIN_RIGHT, True)
+        elif fth <= freq <= fub:
+            gpio.output(PIN_LEFT, False)
+            gpio.output(PIN_RIGHT, True)
+        else:
+            gpio.output(PIN_LEFT, False)
+            gpio.output(PIN_RIGHT, False)
+            pass  # NO MOVEMENT
     else:
         gpio.output(PIN_LEFT, False)
         gpio.output(PIN_RIGHT, False)
-        pass  # NO MOVEMENT
 
 
 def run():
