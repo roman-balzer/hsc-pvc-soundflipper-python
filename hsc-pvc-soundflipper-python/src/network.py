@@ -11,7 +11,7 @@ def setup():
     configParameters = config['network']
 
     URI = configParameters['uri']
-    server = xmlrpc.client.ServerProxy(URI)
+    server = xmlrpc.client.ServerProxy(URI, allow_none=True)
     server.newGame()
 
 def send(points):
@@ -24,5 +24,4 @@ def startNewGame():
 
 def setMultiplicator(mult):
     global server
-    #TODO: has to be implemented in server
     server.setMultiplicator(mult)

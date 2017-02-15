@@ -10,7 +10,7 @@ import only_plot as flip
 FORMAT = pyaudio.paInt16  # We use 16bit format per sample
 CHANNELS = 1
 RATE = 44100
-SAMPLE_SIZE = 4100  # 1024bytes of data red from a buffer
+SAMPLE_SIZE = 1024  # 1024bytes of data red from a buffer
 RECORD_DURATION = 3000
 
 CHUNK = SAMPLE_SIZE
@@ -102,7 +102,10 @@ while True:
     print("RMS: %f" % rms)
     print("FREQ: %f" % freq)
 
-    if count >= 100:
+    if count < 100:
+        rms +=1000
+
+    if count >= 200:
 
         rmsA.pop(0)
         freqA.pop(0)

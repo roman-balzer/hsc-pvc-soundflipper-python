@@ -1,12 +1,15 @@
 import RPi.GPIO as GPIO
 import threading
-import network
+#import network
 import ear
 #import launch
 #import voice
 #import mouth
 
-network.setup()
+
+GPIO.setmode(GPIO.BCM)
+
+#network.setup()
 #launch.setup()
 #voice.setup()
 #mouth.setup()
@@ -27,15 +30,13 @@ try:
     #start the ear thread
     background = EarThread()
     background.start()
-
     #the voice component acts as the main Programm
     #there goes the function call of voice component
     #voice.run()
-
     background.join()
 
 # Aufraeumarbeiten nachdem das Programm beendet wurde
 except KeyboardInterrupt: 
     GPIO.cleanup()
-    voice.cleanup()
+#    voice.cleanup()
 
