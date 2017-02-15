@@ -2,16 +2,20 @@ import xmlrpc.client
 
 class NetworkHandler:
     def __init__(self, configHandler):
-        config = configHandler.getNetworkConfig()
-        URI = config['uri']
-        self.server = xmlrpc.client.ServerProxy(URI, allow_none=True)
-        startNewGame()
+        print("NetworkHandler: Constructor")
+        #config = configHandler.getNetworkConfig()
+        #URI = config['uri']
+        #self.server = xmlrpc.client.ServerProxy(URI, allow_none=True)
+        #self.startNewGame()
 
     def send(self, points):
-        self.server.addPoints(points)
+        horst = 1
+        #self.server.addPoints(points)
 
-    def startNewGame(self)
-        self.server.newGame()
+    def startNewGame(self):
+        horst = 1
+        #self.server.newGame()
 
     def setMultiplicator(self, mult):
-        self.server.setMultiplicator(mult)
+        horst = 1
+        #self.server.setMultiplicator(mult)

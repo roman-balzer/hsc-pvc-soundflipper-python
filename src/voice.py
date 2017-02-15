@@ -11,80 +11,80 @@ class Voice:
         configVoiceParams = configHandler.getVoiceConfig()
         configGPIOParams = configHandler.getGPIOConfig()
 
-        FORMAT = pyaudio.paInt16  # We use 16bit format per sample
-        CHANNELS = int(configVoiceParams['Channels'])
-        RATE = int(configVoiceParams['Rate'])
-        SAMPLE_SIZE = int(configVoiceParams['Sample_Size'])  # 1024bytes of data red from a buffer
-        CHUNK = SAMPLE_SIZE
-        WINDOW = np.blackman(CHUNK)
+        self.FORMAT = pyaudio.paInt16  # We use 16bit format per sample
+        self.CHANNELS = int(configVoiceParams['Channels'])
+        self.RATE = int(configVoiceParams['Rate'])
+        self.SAMPLE_SIZE = int(configVoiceParams['Sample_Size'])  # 1024bytes of data red from a buffer
+        self.CHUNK = self.SAMPLE_SIZE
+        self.WINDOW = np.blackman(self.CHUNK)
 
-        RMS_LOWER_BOUND = int(configVoiceParams['Rms_Lower_Bound'])
-        RMS_ADAPTION_FACTOR = float(configVoiceParams['Rms_Adaption_Factor'])
-        RMS_MIN_VALUE = float(configVoiceParams['Rms_Min_Value'])
-        MEDIAM_SAMPLE_SIZE = int(configVoiceParams['Median_Sample_Size'])
+        self.RMS_LOWER_BOUND = int(configVoiceParams['Rms_Lower_Bound'])
+        self.RMS_ADAPTION_FACTOR = float(configVoiceParams['Rms_Adaption_Factor'])
+        self.RMS_MIN_VALUE = float(configVoiceParams['Rms_Min_Value'])
+        self.MEDIAM_SAMPLE_SIZE = int(configVoiceParams['Median_Sample_Size'])
 
-        FREQ_LOWER_BOUND = int(configVoiceParams['Freq_Lower_Bound'])
-        FREQ_THRESHOLD = int(configVoiceParams['Freq_Threshold'])
-        FREQ_UPPER_BOUND = int(configVoiceParams['Freq_Upper_Bound'])
+        self.FREQ_LOWER_BOUND = int(configVoiceParams['Freq_Lower_Bound'])
+        self.FREQ_THRESHOLD = int(configVoiceParams['Freq_Threshold'])
+        self.FREQ_UPPER_BOUND = int(configVoiceParams['Freq_Upper_Bound'])
 
         # This Factor skews the Freq Threshold, since normally when
         # doing a louder sound, this will result in an increase of the freq
-        SKEW = int(configVoiceParams['Skew'])
+        self.SKEW = int(configVoiceParams['Skew'])
 
         ## PIN VARS
-        PIN_LEFT = int(configGPIOParams['Flipper_Left_OutputPin'])
-        PIN_RIGHT = int(configGPIOParams['Flipper_Right_OutputPin'])
+        self.PIN_LEFT = int(configGPIOParams['Flipper_Left_OutputPin'])
+        self.PIN_RIGHT = int(configGPIOParams['Flipper_Right_OutputPin'])
 
         #SET UP GPIO PINS ON RASPBERRY
         gpio.setmode(gpio.BCM)
-        gpio.setup(PIN_LEFT,gpio.OUT)
-        gpio.setup(PIN_RIGHT,gpio.OUT)
+        gpio.setup(self.PIN_LEFT,gpio.OUT)
+        gpio.setup(self.PIN_RIGHT,gpio.OUT)
 
-    def draw_flipper(rms, freq):
+    def draw_flipper(self, rms, freq):
         if rms > 5000:
             rms = 5000
         if freq > 1000:
             freq = 1000
 
-        flb = (rms + FREQ_LOWER_BOUND*SKEW)/SKEW
-        fub = (rms + FREQ_UPPER_BOUND*SKEW)/SKEW
-        fth = (rms + FREQ_THRESHOLD*SKEW)/SKEW
+        flb = (rms + self.FREQ_LOWER_BOUND*self.SKEW)/self.SKEW
+        fub = (rms + self.FREQ_UPPER_BOUND*self.SKEW)/self.SKEW
+        fth = (rms + self.FREQ_THRESHOLD*self.SKEW)/self.SKEW
 
-        if rms > RMS_LOWER_BOUND:
+        if rms > self.RMS_LOWER_BOUND:
             if flb <= freq <= fth:
-                gpio.output(PIN_LEFT, True)
-                gpio.output(PIN_RIGHT, False)
+                gpio.output(self.PIN_LEFT, True)
+                gpio.output(self.PIN_RIGHT, False)
 
             elif fth <= freq <= fub:
-                gpio.output(PIN_LEFT, False)
-                gpio.output(PIN_RIGHT, True)
+                gpio.output(self.PIN_LEFT, False)
+                gpio.output(self.PIN_RIGHT, True)
             else:
-                gpio.output(PIN_LEFT, False)
-                gpio.output(PIN_RIGHT, False)
+                gpio.output(self.PIN_LEFT, False)
+                gpio.output(self.PIN_RIGHT, False)
                 pass  # NO MOVEMENT
         else:
-            gpio.output(PIN_LEFT, False)
-            gpio.output(PIN_RIGHT, False)
+            gpio.output(self.PIN_LEFT, False)
+            gpio.output(self.PIN_RIGHT, False)
 
 
-    def run():
+    def run(self):
         # start Recording
         audio = pyaudio.PyAudio()
-        stream = audio.open(format=FORMAT,
-                            channels=CHANNELS,
-                            rate=RATE, input=True,
-                            frames_per_buffer=SAMPLE_SIZE)
+        stream = audio.open(format=self.FORMAT,
+                            channels=self.CHANNELS,
+                            rate=self.RATE, input=True,
+                            frames_per_buffer=self.SAMPLE_SIZE)
         count = 0
         frames = []
         rms_list = []
         while True:
             count += 1
-            data = stream.read(SAMPLE_SIZE)
+            data = stream.read(self.SAMPLE_SIZE)
             frames.append(data)
 
             rms = audioop.rms(data, 2)
 
-            indata = np.array(wave.struct.unpack("%dh" % CHUNK, data)) * WINDOW
+            indata = np.array(wave.struct.unpack("%dh" % self.CHUNK, data)) * self.WINDOW
             fftData = abs(np.fft.rfft(indata)) ** 2
             # find the maximum
             which = fftData[1:].argmax() + 1
@@ -93,20 +93,20 @@ class Voice:
                 y0, y1, y2 = np.log(fftData[which - 1:which + 2:])
                 x1 = (y2 - y0) * .5 / (2 * y1 - y2 - y0)
                 # find the frequency and output it
-                freq = (which + x1) * RATE / SAMPLE_SIZE
+                freq = (which + x1) * self.RATE / self.SAMPLE_SIZE
             else:
-                freq = which * RATE / SAMPLE_SIZE
+                freq = which *  self.RATE / self.SAMPLE_SIZE
 
             # Create a List to calculate the median of the rms
-            if count > MEDIAM_SAMPLE_SIZE:
+            if count > self.MEDIAM_SAMPLE_SIZE:
                 rms_list.pop(0)
             rms_list.append(rms)
 
             # Adjust the Volume Threshold based on the last RMS values
-            RMS_LOWER_BOUND = max(RMS_ADAPTION_FACTOR * statistics.median(rms_list), RMS_MIN_VALUE)
-            draw_flipper(rms, freq)
+            self.RMS_LOWER_BOUND = max(self.RMS_ADAPTION_FACTOR * statistics.median(rms_list), self.RMS_MIN_VALUE)
+            self.draw_flipper(rms, freq)
 
-    def cleanup():
+    def cleanup(self):
         stream.stop_stream()
         stream.close()
         audio.terminate()

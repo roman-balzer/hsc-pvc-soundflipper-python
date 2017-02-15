@@ -8,20 +8,21 @@ class Ear:
         self.networkHandler = networkHandler
         self.launcher = launcher
         config = configHandler.getGPIOConfig()
+        configEar = configHandler.getEarConfig()
 
         self.Trigger_OutputPin = int(config['Trigger_OutputPin'])
         self.Echo_InputPin = int(config['Echo_InputPin'])
-        self.sleeptime = float(config['Sleeptime'])
-        self.distance = int(config['Distance'])
-        self.carrier_Signal_duration = float(config['Carrier_Signal_duration'])
+        self.sleeptime = float(configEar['Sleeptime'])
+        self.maxDistance = int(configEar['Distance'])
+        self.carrier_Signal_duration = float(configEar['Carrier_Signal_Duration'])
 
         random.seed()
-        GPIO.setup(Trigger_OutputPin, GPIO.OUT)
-        GPIO.setup(Echo_InputPin, GPIO.IN)
-        GPIO.output(Trigger_OutputPin, False)
+        GPIO.setup(self.Trigger_OutputPin, GPIO.OUT)
+        GPIO.setup(self.Echo_InputPin, GPIO.IN)
+        GPIO.output(self.Trigger_OutputPin, False)
 
     def onBallDetection(self):
-        self.launcher.setNewGameFalse()
+        self.launcher.setIsNewGame(False)
         self.networkHandler.send(100)
         randomNumber = random.randrange(1,4)
         audioFilePath = "audio/" + str(randomNumber) + ".mp3"
@@ -35,10 +36,10 @@ class Ear:
 
         # Hier wird die Stopuhr gestartet
         timeOn = time.time()
-        while GPIO.input(Echo_InputPin) == 0:
+        while GPIO.input(self.Echo_InputPin) == 0:
             timeOn = time.time() # Es wird solange die aktuelle Zeit gespeichert, bis das Signal aktiviert wird
 
-        while GPIO.input(Echo_InputPin) == 1:
+        while GPIO.input(self.Echo_InputPin) == 1:
             timeOff = time.time() # Es wird die letzte Zeit aufgenommen, wo noch das Signal aktiv war
 
         # Die Differenz der beiden Zeiten ergibt die gesuchte Dauer
@@ -52,15 +53,15 @@ class Ear:
             # in das Ohr gefallen ist.
             #print("distance außerhalb des Messbereich")
             #print("------------------------------")
-            onBallDetection()
+            self.onBallDetection()
         else:
             # Der distance wird auf zwei Stellen hinterm Komma formatiert
             distance = format((duration * 34300) / 2, '.2f')
             #print("Der distance beträgt:%s"%distance)
             #print("------------------------------")
-            if float(distance) <= distance:
-                onBallDetection()
+            if float(distance) <= self.maxDistance:
+                self.onBallDetection()
 
         # Pause zwischen den einzelnen Messungen
-        time.sleep(sleeptime)
+        time.sleep(self.sleeptime)
 
