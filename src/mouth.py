@@ -26,7 +26,7 @@ class Mouth:
     # That means if the Flipper is in up position.
     # Sets the score muliplicator to 1.5. 
     # @param channel The GPIO channel on which the pull-up event is detected
-    def mouth_happy_pressed(channel):
+    def mouth_happy_pressed(self, channel):
         print("Mouth-Happy-Pressed Callback")
         self.networkHandler.setMultiplicator(1.5)
     
@@ -34,7 +34,7 @@ class Mouth:
     # That means if the Flipper is in down position.
     # Sets the score muliplicator to 1.5.  
     # @param channel The GPIO channel on which the pull-up event is detected
-    def mouth_sad_pressed(channel):
+    def mouth_sad_pressed(self, channel):
         print("Mouth-Sad-Pressed Callback")
         self.networkHandler.setMultiplicator(0.5)
 
